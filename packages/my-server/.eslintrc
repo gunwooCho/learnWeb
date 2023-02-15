@@ -1,0 +1,16 @@
+{
+    "rules": {
+        "react/prop-types": "off",
+        "no-unused-vars": "off",
+        "no-useless-constructor": "off",
+        "class-methods-use-this": "off",
+        "no-empty-function": [
+            "error",
+            {
+                "allow": [
+                    "constructors"
+                ]
+            }
+        ]
+    }
+}
