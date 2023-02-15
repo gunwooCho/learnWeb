@@ -6,6 +6,9 @@
 
 ## Packages
 
+- [my-server](./packages/my-server/README.md)
+- [my-react](./packages/my-react/README.md)
+
 ### my-server
 
 - [motivation](https://github.com/kyle-mccarthy/nest-next/tree/master/examples/basic)
