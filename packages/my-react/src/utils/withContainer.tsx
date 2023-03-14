@@ -35,9 +35,9 @@ const withContainer = <PP extends RenderProps, CP>(
       delete dumyProps.state;
       delete dumyProps.updater;
       // eslint-disable-next-line no-underscore-dangle
-      delete dumyProps._reactInternalFiber;
-      // eslint-disable-next-line no-underscore-dangle
       delete dumyProps._reactInternalInstance;
+      // eslint-disable-next-line no-underscore-dangle
+      delete dumyProps._reactInternals;
 
       return (
         <CustomComponent {...dumyProps} />
