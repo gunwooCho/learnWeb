@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unused-class-component-methods */
 import PropTypes from 'prop-types';
 import React from 'react';
 
@@ -26,24 +27,17 @@ class AddPolygonContainer extends React.Component {
     super(props);
     this.setRef();
 
-    const { svg } = this.props;
-    this.unbindEvent(svg);
-    this.bindEvent(svg);
-  }
+    const { setContainer } = this.props;
 
-  /** @param {Props} prevProps */
-  componentDidUpdate(prevProps) {
-    const { svg } = this.props;
-
-    if (prevProps.svg !== svg) {
-      this.unbindEvent(prevProps.svg);
-      this.bindEvent(svg);
-    }
+    setContainer(this);
   }
 
   componentWillUnmount() {
-    const { svg } = this.props;
-    this.unbindEvent(svg);
+    const { setContainer, getContainer } = this.props;
+    const container = getContainer();
+    if (container.state.targetContainer === this) {
+      setContainer();
+    }
   }
 
   /** @param {SVGPolygonElement} element */
@@ -51,62 +45,13 @@ class AddPolygonContainer extends React.Component {
     this.drawData.polygon = element;
   }
 
-  bindEvent = (element, options) => {
-    if (element instanceof SVGSVGElement) {
-      const { endStep } = this.props;
-      this.drawData.endStep = endStep;
-
-      element.addEventListener('mousedown', this.onMousedown);
-    }
-
-    if (element instanceof Document) {
-      document.addEventListener('mouseup', this.onMouseup, { once: true });
-
-      if (options.isInit === false) {
-        return;
-      }
-
-      document.addEventListener('mousemove', this.onMousemove);
-      document.addEventListener('click', this.onClick);
-    }
-  }
-
-  /** @param {SVGSVGElement} svg */
-  unbindEvent = (element) => {
-    if (element instanceof SVGSVGElement) {
-      element.removeEventListener('mousedown', this.onMousedown);
-    }
-
-    if (element instanceof Document) {
-      element.removeEventListener('mousemove', this.onMousemove);
-      element.removeEventListener('click', this.onClick);
-    }
-  }
-
-  /** @param {MouseEvent} */
-  getCoordinate = ({ clientX, clientY }) => {
-    const { svg, viewBox } = this.props;
-    let point = svg.createSVGPoint();
-
-    point.x = clientX;
-    point.y = clientY;
-    point = point.matrixTransform(svg.getScreenCTM().inverse());
-
-    point.x = Math.max(point.x, viewBox[0]); // under
-    point.x = Math.min(point.x, viewBox[2]); // over
-
-    point.y = Math.max(point.y, viewBox[1]); // under
-    point.y = Math.min(point.y, viewBox[3]); // over
-
-    return point;
-  }
-
   /**
    * @param {number} x
    * @param {number} y
    */
   createPoint = (x, y) => {
-    const { svg } = this.props;
+    const { getContainer } = this.props;
+    const { state: { svg } } = getContainer();
     const point = svg.createSVGPoint();
 
     point.x = x;
@@ -141,23 +86,24 @@ class AddPolygonContainer extends React.Component {
     this.renderCoordinate();
   }
 
-  /** @param {MouseEvent} event */
-  onMousedown = event => {
+  /**
+   * @param {MouseEvent} event
+   * @param {SVGPoint} downPoint
+   */
+  onMousedown = (event, downPoint) => {
     const isInit = !this.drawData.downPoint;
 
-    this.bindEvent(document, {
-      isInit,
-    });
-
     if (isInit === true) {
-      this.drawData.downPoint = this.getCoordinate(event);
+      this.drawData.downPoint = downPoint;
     }
   }
 
-  /** @param {MouseEvent} event */
-  onMousemove = event => {
+  /**
+   * @param {MouseEvent} event
+   * @param {SVGPoint} point
+   */
+  onMousemove = (event, point) => {
     const { minSize } = this.props;
-    const point = this.getCoordinate(event);
 
     const { step, downPoint } = this.drawData;
     if (step === 0 && this.drawData.mode !== DRAWING_MODE.RECTANGLE) {
@@ -177,18 +123,17 @@ class AddPolygonContainer extends React.Component {
     this.setPoint(point);
   }
 
-  /** @param {PointerEvent} event */
-  onMouseup = event => {
-    const point = this.getCoordinate(event);
+  /**
+   * @param {PointerEvent} event
+   * @param {SVGPoint} point
+   */
+  onMouseup = (event, point) => {
     this.setPoint(point);
     this.drawData.step += 1;
 
     if (this.drawData.endStep <= this.drawData.step) {
-      const { onChange } = this.props;
-      this.unbindEvent(document);
-
+      const { onChange, getContainer } = this.props;
       // check is overflow minSize
-      onChange(this.drawData.coordinates);
 
       const { endStep } = this.props;
       this.setDrawData({
@@ -199,17 +144,18 @@ class AddPolygonContainer extends React.Component {
         downPoint: null,
         coordinates: [],
       });
+
+      getContainer().onEnd();
+      onChange(this.drawData.coordinates);
     }
   }
 
-  /** @param {PointerEvent} event */
-  onClick = (event) => {
-    const { svg } = this.props;
-    if (event.target === svg) {
-      return;
-    }
-
-    this.onMouseup(event);
+  /**
+   * @param {PointerEvent} event
+   * @param {SVGPoint} point
+   */
+  onClick = (event, point) => {
+    this.onMouseup(event, point);
   }
 
   renderCoordinate = () => {
@@ -231,7 +177,6 @@ class AddPolygonContainer extends React.Component {
 }
 
 AddPolygonContainer.defaultProps = {
-  svg: null,
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   onChange: () => { },
 
@@ -242,9 +187,11 @@ AddPolygonContainer.defaultProps = {
 
 AddPolygonContainer.propTypes = {
   render: PropTypes.func.isRequired,
-  svg: PropTypes.instanceOf(Object),
-  viewBox: PropTypes.arrayOf(Number).isRequired,
   onChange: PropTypes.func,
+
+  // SvgEditorContainer
+  setContainer: PropTypes.func.isRequired,
+  getContainer: PropTypes.func.isRequired,
 
   // defaultProps
   minSize: PropTypes.number,
@@ -254,12 +201,18 @@ AddPolygonContainer.propTypes = {
 export default AddPolygonContainer;
 
 /**
+@typedef {import('./SvgEditorContainer').default} SvgEditorContainer
+@typedef {{ }} State
+
 @typedef {{
   svg?: SVGSVGElement,
-  viewBox: number[],
+  setContainer: (container: any) => void,
+  getContainer: () => SvgEditorContainer,
   minSize: number,
   endStep: number,
 
   onChange: (coordinates: SVGPoint[]) => void,
 }} Props
+
+@typedef {AddPolygonContainer & Props & State} RenderProps
 */

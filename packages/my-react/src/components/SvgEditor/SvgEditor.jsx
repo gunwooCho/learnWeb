@@ -16,15 +16,16 @@ const SvgEditor = ({
   useAdd,
 
   // [Container] SvgEditorContainer
-  svg,
   setRef,
+  setContainer,
+  getContainer,
 }) => (
   <BorderStyled width={width} height={height}>
     <SvgStyled className={className}
       viewBox={viewBox.join(' ')}
       ref={setRef}
     >
-      {useAdd && <AddPolygon svg={svg} viewBox={viewBox} />}
+      {useAdd && <AddPolygon setContainer={setContainer} getContainer={getContainer} />}
     </SvgStyled>
   </BorderStyled>
 );
@@ -33,23 +34,22 @@ SvgEditor.defaultProps = {
   className: '',
   width: 640,
   height: 360,
-  viewBox: [0, 0, 1920, 1080],
   useAdd: true,
 
   // [Container] SvgEditorContainer
-  svg: null,
 };
 
 SvgEditor.propTypes = {
   className: PropTypes.string,
   width: PropTypes.number,
   height: PropTypes.number,
-  viewBox: PropTypes.arrayOf(Number),
   useAdd: PropTypes.bool,
 
   // [Container] SvgEditorContainer
-  svg: PropTypes.instanceOf(Object),
+  viewBox: PropTypes.arrayOf(Number).isRequired,
   setRef: PropTypes.func.isRequired,
+  setContainer: PropTypes.func.isRequired,
+  getContainer: PropTypes.func.isRequired,
 };
 
 export default withContainer(SvgEditorContainer, SvgEditor);;
@@ -60,7 +60,8 @@ export default withContainer(SvgEditorContainer, SvgEditor);;
   & {
     width: number,
     height: number,
-    viewBox: number[],
+    viewBox: [number, number, number, number],
+    useAdd: boolean,
   }
 } Props
 */
