@@ -4,7 +4,7 @@ import React from 'react';
 import SvgEditorContainer from '../../containers/SvgEditorContainer';
 import withContainer from '../../utils/withContainer';
 
-import AddPolygon from './AddPolygon';
+import Polygon from './Polygon/Polygon';
 import { BorderStyled, SvgStyled } from './SvgEditorStyled';
 
 /** @type {React.FC<Props>} */
@@ -13,19 +13,22 @@ const SvgEditor = ({
   width,
   height,
   viewBox,
-  useAdd,
 
   // [Container] SvgEditorContainer
   setRef,
   setContainer,
-  getContainer,
+  instance,
 }) => (
   <BorderStyled width={width} height={height}>
     <SvgStyled className={className}
       viewBox={viewBox.join(' ')}
       ref={setRef}
     >
-      {useAdd && <AddPolygon setContainer={setContainer} getContainer={getContainer} />}
+      <Polygon
+        coordinates={[]}
+        instance={instance}
+        setContainer={setContainer}
+      />
     </SvgStyled>
   </BorderStyled>
 );
@@ -34,7 +37,6 @@ SvgEditor.defaultProps = {
   className: '',
   width: 640,
   height: 360,
-  useAdd: true,
 
   // [Container] SvgEditorContainer
 };
@@ -43,13 +45,12 @@ SvgEditor.propTypes = {
   className: PropTypes.string,
   width: PropTypes.number,
   height: PropTypes.number,
-  useAdd: PropTypes.bool,
 
   // [Container] SvgEditorContainer
   viewBox: PropTypes.arrayOf(Number).isRequired,
   setRef: PropTypes.func.isRequired,
   setContainer: PropTypes.func.isRequired,
-  getContainer: PropTypes.func.isRequired,
+  instance: PropTypes.instanceOf(Object).isRequired,
 };
 
 export default withContainer(SvgEditorContainer, SvgEditor);;

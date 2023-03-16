@@ -11,6 +11,8 @@ export const DRAWING_MODE = Object.freeze({
 class SvgEditorContainer extends React.Component {
   startPoint = null;
 
+  instance = this;
+
   constructor(props) {
     super(props);
 
@@ -118,8 +120,6 @@ class SvgEditorContainer extends React.Component {
     }
   }
 
-  // unsed method's in this container
-
   setRef = (ref = null) => {
     if (ref instanceof SVGSVGElement) {
       const { svg } = this.state;
@@ -136,11 +136,22 @@ class SvgEditorContainer extends React.Component {
     this.setState({ targetContainer });
   }
 
-  getContainer = () => this;
-
   onEnd = () => {
     this.unbindEvent(document);
     this.startPoint = null;
+  }
+
+  /**
+   * @param {number} x
+   * @param {number} y
+   */
+  createPoint = (x, y) => {
+    const { svg } = this.state;
+    const point = svg.createSVGPoint();
+
+    point.x = x;
+    point.y = y;
+    return point;
   }
 
   render() {
