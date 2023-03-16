@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unused-class-component-methods */
 import PropTypes from 'prop-types';
 import React from 'react';
 
@@ -8,12 +9,30 @@ export const DRAWING_MODE = Object.freeze({
 
 /** @extends {React.Component<Props>} */
 class EditPolygonContainer extends React.Component {
+  elementRefs = {};
+
   /** @param {Props} props */
   constructor(props) {
     super(props);
-    const { setContainer } = props;
+    const { setContainer, coordinates } = props;
 
     setContainer(this);
+
+    /** @type {State} */
+    this.state = {
+      ref: null,
+      movedCoordinates: coordinates,
+    };
+  }
+
+  componentDidUpdate(prevProps) {
+    const { coordinates } = this.props;
+
+    if (JSON.stringify(coordinates) !== JSON.stringify(prevProps.coordinates)) {
+      this.setState({
+        movedCoordinates: coordinates,
+      });
+    }
   }
 
   componentWillUnmount() {
@@ -23,6 +42,47 @@ class EditPolygonContainer extends React.Component {
     if (targetContainer === this) {
       setContainer();
     }
+  }
+
+  setRef = (...args) => ref => {
+    if (ref instanceof SVGCircleElement) {
+      const [index] = args;
+
+      if (this.elementRefs[index] !== ref) {
+        this.elementRefs[index] = ref;
+      }
+    }
+  }
+
+  onMousedown = (event, point) => {
+    this.setState({ ref: this.elementRefs[event.target.id] || null });
+  }
+
+  onMousemove = (event, point) => {
+    const { ref, movedCoordinates } = this.state;
+    if (ref === null) {
+      return;
+    }
+
+    const coodinates = [...movedCoordinates];
+    coodinates[ref.id] = point;
+
+    this.setState({ movedCoordinates: coodinates })
+  }
+
+  onMouseup = (event, point) => {
+    const { ref, movedCoordinates } = this.state;
+    if (ref === null) {
+      return;
+    }
+
+    const coodinates = [...movedCoordinates];
+    coodinates[ref.id] = point;
+
+    this.setState({ movedCoordinates: coodinates, ref: null })
+
+    const { instance } = this.props;
+    instance.onEnd();
   }
 
   render() {
@@ -40,6 +100,7 @@ EditPolygonContainer.defaultProps = {
 
 EditPolygonContainer.propTypes = {
   render: PropTypes.func.isRequired,
+  coordinates: PropTypes.arrayOf(Object).isRequired,
 
   // SvgEditorContainer
   setContainer: PropTypes.func.isRequired,
@@ -50,14 +111,17 @@ EditPolygonContainer.propTypes = {
 export default EditPolygonContainer;
 
 /**
-@typedef {import('./SvgEditorContainer').default} SvgEditorContainer
+@typedef {import('../../SvgEditorContainer').default} SvgEditorContainer
 
-@typedef {{ }} State
+@typedef {{
+  ref?: SVGCircleElement,
+  movedCoordinates: SVGPoint[],
+}} State
 
 @typedef {{
   setContainer: (container: any) => void,
   instance: SvgEditorContainer,
 
 }} Props
-@typedef {AddPolygonContainer & Props & State} RenderProps
+@typedef {EditPolygonContainer & Props & State} RenderProps
 */

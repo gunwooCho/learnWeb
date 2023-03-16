@@ -1,3 +1,4 @@
+/* eslint-disable react/no-array-index-key */
 import PropTypes from 'prop-types';
 import React from 'react';
 
@@ -8,18 +9,19 @@ import withContainer from '../../../utils/withContainer';
 const EditPolygon = ({
   className,
   id,
-  coordinates,
 
-  // AddPolygonContainer
+  // EditPolygonContainer
+  setRef,
+  movedCoordinates,
 }) => (
   <g id={id} className={className}>
-    {coordinates.map(({ x, y }, index, arr) => {
-      const nextIndex = (index + 1) % coordinates.length;
+    {movedCoordinates.map(({ x, y }, index, arr) => {
+      const nextIndex = (index + 1) % movedCoordinates.length;
       const p2 = arr[nextIndex];
 
       return (
         <line
-          key={`line-${id}-${x}${y}`}
+          key={`line-${id}-${index}`}
           x1={x}
           y1={y}
           x2={p2.x}
@@ -29,9 +31,11 @@ const EditPolygon = ({
       );
     })}
 
-    {coordinates.map(({ x, y }) => (
+    {movedCoordinates.map(({ x, y }, index) => (
       <circle
-        key={`circle-${id}-${x}${y}`}
+        id={index}
+        ref={setRef(index)}
+        key={`circle-${id}-${index}`}
         cx={x}
         cy={y}
         r="10"
@@ -47,9 +51,10 @@ EditPolygon.defaultProps = {
 EditPolygon.propTypes = {
   className: PropTypes.string,
   id: PropTypes.string.isRequired,
-  coordinates: PropTypes.arrayOf(Object).isRequired,
+  movedCoordinates: PropTypes.arrayOf(Object).isRequired,
 
   // [Container] AddPolygonContainer
+  setRef: PropTypes.func.isRequired,
 }
 
 export default withContainer(EditPolygonContainer, EditPolygon);
@@ -59,5 +64,5 @@ export default withContainer(EditPolygonContainer, EditPolygon);
   className: string
   id: string,
   coordinates: SVGPoint[],
-} & import('../../../containers/SvgEditor/Polygon/AddPolygonContainer').RenderProps} Props
+} & import('../../../containers/SvgEditor/Polygon/EditPolygonContainer').RenderProps} Props
 */
