@@ -15,6 +15,8 @@ const EditPolygon = ({
   movedCoordinates,
 }) => (
   <g id={id} className={className}>
+    <polygon points={movedCoordinates.map(({ x, y }) => `${x},${y}`).join(' ')} />
+
     {movedCoordinates.map(({ x, y }, index, arr) => {
       const nextIndex = (index + 1) % movedCoordinates.length;
       const p2 = arr[nextIndex];

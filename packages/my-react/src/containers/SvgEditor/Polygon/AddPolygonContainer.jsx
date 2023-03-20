@@ -2,6 +2,8 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
+import SvgEditorContainer from '../../SvgEditorContainer';
+
 export const SHAPE_TYPE = Object.freeze({
   RECTANGLE: 'rectangle',
   POLYGON: 'polygon',
@@ -9,78 +11,67 @@ export const SHAPE_TYPE = Object.freeze({
 
 /** @extends {React.Component<Props>} */
 class AddPolygonContainer extends React.Component {
-  drawData = {
-    /** @type {SVGPolygonElement} */
-    polygon: null,
-
-    mode: SHAPE_TYPE.POLYGON,
-
-    endStep: 0,
-    step: 0,
-    /** @type {SVGPoint} */
-    downPoint: null,
-    /** @type {SVGPoint[]} */
-    coordinates: [],
-  }
-
   /** @param {Props} props */
   constructor(props) {
     super(props);
-    const { setContainer } = props;
+    const { instance: { setContainer } } = props;
+
+    /** @type {State} */
+    this.state = {
+      mode: SHAPE_TYPE.POLYGON,
+      downPoint: null,
+      endStep: 0,
+      step: 0,
+      coordinates: [],
+    }
 
     setContainer(this);
   }
 
   componentWillUnmount() {
-    const { setContainer, instance } = this.props;
-    const { state: { targetContainer } } = instance;
-
-    if (targetContainer === this) {
-      setContainer();
-    }
-  }
-
-  /** @param {SVGPolygonElement} element */
-  setRef = (element = null) => {
-    this.drawData.polygon = element;
-  }
-
-  setDrawData = (data = {}) => {
-    Object.assign(this.drawData, data);
-    this.renderCoordinate();
+    const { instance: { unsetContainer } } = this.props;
+    unsetContainer(this);
   }
 
   /** @param {SVGPoint} point */
   setPoint = point => {
-    const { step, mode, downPoint } = this.drawData;
+    const { step, mode, downPoint, coordinates: oldCoordinates } = this.state;
 
     switch (mode) {
       case SHAPE_TYPE.RECTANGLE: {
-        const { instance } = this.props;
-        const { createPoint } = instance;
-        this.drawData.coordinates = [
-          downPoint,
-          createPoint(downPoint.x, point.y),
-          point,
-          createPoint(point.x, downPoint.y),
-        ];
+        const { instance: { createPoint } } = this.props;
+
+        this.setState({
+          coordinates: [
+            downPoint,
+            createPoint(downPoint.x, point.y),
+            point,
+            createPoint(point.x, downPoint.y),
+          ]
+        })
         break;
       }
 
-      default:
-        this.drawData.coordinates[step] = point;
+      default: {
+        const coordinates = [...oldCoordinates];
+        coordinates[step] = point;
+        this.setState({ coordinates });
+      }
     }
-
-    this.renderCoordinate();
   }
 
   drawEnd = () => {
-    const { onChange, instance } = this.props;
+    const { onChange, instance, endStep } = this.props;
     const { onEnd } = instance;
     // check is overflow min/max size
 
-    const { endStep } = this.props;
-    this.setDrawData({
+    onEnd();
+    if (onChange) {
+      const { coordinates } = this.state;
+      onChange([...coordinates]);
+    }
+
+    this.setState({
       mode: SHAPE_TYPE.POLYGON,
 
       step: 0,
@@ -88,11 +79,6 @@ class AddPolygonContainer extends React.Component {
       downPoint: null,
       coordinates: [],
     });
-
-    onEnd();
-    if (onChange) {
-      onChange(this.drawData.coordinates);
-    }
   }
 
   /**
@@ -100,10 +86,11 @@ class AddPolygonContainer extends React.Component {
    * @param {SVGPoint} downPoint
    */
   onMousedown = (event, downPoint) => {
-    const isDrawStart = !!this.drawData.downPoint;
+    const { downPoint: prevDown } = this.state;
+    const isDrawStart = !!prevDown;
 
     if (isDrawStart === false) {
-      this.drawData.downPoint = downPoint;
+      this.setState({ downPoint });
     }
   }
 
@@ -114,16 +101,15 @@ class AddPolygonContainer extends React.Component {
   onMousemove = (event, point) => {
     const { minSize } = this.props;
 
-    const { step, downPoint } = this.drawData;
-    if (step === 0 && this.drawData.mode !== SHAPE_TYPE.RECTANGLE) {
+    const { mode, step, downPoint } = this.state;
+    if (step === 0 && mode !== SHAPE_TYPE.RECTANGLE) {
       const diffX = point.x - downPoint.x;
       const diffY = point.y - downPoint.y;
 
       if (Math.abs(diffX) > minSize
         || Math.abs(diffY) > minSize
       ) {
-        this.drawData.mode = SHAPE_TYPE.RECTANGLE;
-        this.drawData.endStep = 1;
+        this.setState({ mode: SHAPE_TYPE.RECTANGLE, endStep: 1 })
         this.setPoint(downPoint);
         return;
       }
@@ -137,11 +123,14 @@ class AddPolygonContainer extends React.Component {
    * @param {SVGPoint} point
    */
   onMouseup = (event, point) => {
+    const { step, endStep } = this.state;
     this.setPoint(point);
-    this.drawData.step += 1;
 
-    if (this.drawData.endStep <= this.drawData.step) {
+    const nextStep = step + 1;
+    if (endStep <= nextStep) {
       this.drawEnd();
+    } else {
+      this.setState({ step: nextStep });
     }
   }
 
@@ -153,20 +142,12 @@ class AddPolygonContainer extends React.Component {
     this.onMouseup(event, point);
   }
 
-  renderCoordinate = () => {
-    const { coordinates, polygon } = this.drawData;
-    polygon.setAttribute(
-      'points',
-      coordinates.map(coordinate => `${coordinate.x},${coordinate.y}`).join(' ')
-    );
-  };
-
   render() {
     const { render } = this.props;
     return render({
       ...this,
-      ...this.state,
       ...this.props,
+      ...this.state,
     })
   }
 }
@@ -184,8 +165,7 @@ AddPolygonContainer.propTypes = {
   onChange: PropTypes.func,
 
   // SvgEditorContainer
-  setContainer: PropTypes.func.isRequired,
-  instance: PropTypes.instanceOf(Object).isRequired,
+  instance: PropTypes.instanceOf(SvgEditorContainer).isRequired,
 
   // defaultProps
   minSize: PropTypes.number,
@@ -195,13 +175,16 @@ AddPolygonContainer.propTypes = {
 export default AddPolygonContainer;
 
 /**
-@typedef {import('../../SvgEditorContainer').default} SvgEditorContainer
-@typedef {{ }} State
+@typedef {{
+  downPoint: SVGPoint | null,
+  endStep: number,
+  step: number
+  coordinates: SVGPoint[],
+ }} State
 
 @typedef {{
   onChange: (coordinates: SVGPoint[]) => void,
 
-  setContainer: (container: any) => void,
   instance: SvgEditorContainer,
 
   minSize: number,

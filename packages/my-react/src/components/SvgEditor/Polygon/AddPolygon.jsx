@@ -9,8 +9,9 @@ const AddPolygon = ({
   className,
 
   // AddPolygonContainer
-  setRef,
-}) => <polygon className={className} ref={setRef} strokeWidth={1} stroke="red" />
+  coordinates,
+}) => <polygon className={className} points={coordinates.map(({ x, y }) => `${x},${y}`).join(' ')}  stroke='red'/>
+
 
 AddPolygon.defaultProps = {
   className: '',
@@ -20,7 +21,7 @@ AddPolygon.propTypes = {
   className: PropTypes.string,
 
   // [Container] AddPolygonContainer
-  setRef: PropTypes.func.isRequired,
+  coordinates: PropTypes.arrayOf(SVGPoint).isRequired,
 }
 
 export default withContainer(AddPolygonContainer, AddPolygon);

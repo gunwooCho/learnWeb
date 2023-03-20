@@ -132,8 +132,17 @@ class SvgEditorContainer extends React.Component {
     }
   }
 
+  /** @param {ITargetContainer} targetContainer */
   setContainer = (targetContainer = {}) => {
     this.setState({ targetContainer });
+  }
+
+  /** @param {ITargetContainer} target */
+  unsetContainer = target => {
+    const { targetContainer } = this.state;
+    if (targetContainer === target) {
+      this.setContainer();
+    }
   }
 
   onEnd = () => {
@@ -176,9 +185,18 @@ SvgEditorContainer.propTypes = {
 export default SvgEditorContainer;
 
 /**
+@typedef {(event:MouseEvent, point: SVGPoint)} IOnSvgMouseEvent
+
+@typedef {{
+  onMousedown?: IOnSvgMouseEvent,
+  onMousemove?: IOnSvgMouseEvent,
+  onMouseup?: IOnSvgMouseEvent,
+  onClick?: IOnSvgMouseEvent,
+} & React.ComponentClass} ITargetContainer
+
 @typedef {{
   svg?: SVGSVGElement,
-  targetContainer: Object
+  targetContainer: ITargetContainer,
 }} State
 
 @typedef {{
