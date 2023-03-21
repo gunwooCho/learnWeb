@@ -9,18 +9,23 @@ import withContainer from '../../../utils/withContainer';
 const EditPolygon = ({
   className,
   id,
+  enableEdge,
+  enableMove,
 
   // EditPolygonContainer
   setRef,
   movedCoordinates,
 }) => (
   <g id={id} className={className}>
-    <polygon
-      id={`polygon-${id}`}
-      ref={setRef}
+    {enableMove && (
+      <polygon
+        id={`polygon-${id}`}
+        ref={setRef}
+        // ref={enableMove ? setRef : null}
 
-      points={movedCoordinates.map(({ x, y }) => `${x},${y}`).join(' ')}
-    />
+        points={movedCoordinates.map(({ x, y }) => `${x},${y}`).join(' ')}
+      />
+    )}
 
     {movedCoordinates.map(({ x, y }, index, arr) => {
       const nextIndex = (index + 1) % movedCoordinates.length;
@@ -40,7 +45,7 @@ const EditPolygon = ({
       );
     })}
 
-    {movedCoordinates.map(({ x, y }, index) => (
+    {enableEdge && movedCoordinates.map(({ x, y }, index) => (
       <circle
         id={`circle-${id}-${index}`}
         key={`circle-${id}-${index}`}
@@ -62,10 +67,12 @@ EditPolygon.defaultProps = {
 EditPolygon.propTypes = {
   className: PropTypes.string,
   id: PropTypes.string.isRequired,
-  movedCoordinates: PropTypes.arrayOf(Object).isRequired,
+  enableEdge: PropTypes.bool.isRequired,
+  enableMove: PropTypes.bool.isRequired,
 
-  // [Container] AddPolygonContainer
+  // [Container] EditPolygonContainer
   setRef: PropTypes.func.isRequired,
+  movedCoordinates: PropTypes.arrayOf(Object).isRequired,
 }
 
 export default withContainer(EditPolygonContainer, EditPolygon);
@@ -75,5 +82,8 @@ export default withContainer(EditPolygonContainer, EditPolygon);
   className: string
   id: string,
   coordinates: SVGPoint[],
+
+  enableEdge: boolean,
+  enableMove: boolean,
 } & import('../../../containers/SvgEditor/Polygon/EditPolygonContainer').RenderProps} Props
 */

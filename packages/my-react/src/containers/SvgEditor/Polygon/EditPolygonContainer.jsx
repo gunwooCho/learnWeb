@@ -135,12 +135,12 @@ class EditPolygonContainer extends React.Component {
     }
 
     if (nextCoordinates) {
-      const { instance, coordinates, onChange } = this.props;
+      const { instance, coordinates, id, onChange } = this.props;
       instance.onEnd();
       this.setState({ movedCoordinates: coordinates, ref: null, downPoint: null })
 
       if (onChange) {
-        onChange(nextCoordinates);
+        onChange(nextCoordinates, id);
       }
     }
   }
@@ -162,6 +162,7 @@ EditPolygonContainer.defaultProps = {
 EditPolygonContainer.propTypes = {
   render: PropTypes.func.isRequired,
   coordinates: PropTypes.arrayOf(SVGPoint).isRequired,
+  id: PropTypes.string.isRequired,
   onChange: PropTypes.func,
 
   // SvgEditorContainer
@@ -181,7 +182,10 @@ export default EditPolygonContainer;
 
 @typedef {{
   instance: SvgEditorContainer,
+  id: string,
   coordinates: SVGPoint[],
+
+  onChange: (coordinates: SVGPoint[], id: string) => void,
 }} Props
 
 @typedef {EditPolygonContainer & State & Props} RenderProps

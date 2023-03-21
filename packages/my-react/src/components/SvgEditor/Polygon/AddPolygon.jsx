@@ -10,7 +10,11 @@ const AddPolygon = ({
 
   // AddPolygonContainer
   coordinates,
-}) => <polygon className={className} points={coordinates.map(({ x, y }) => `${x},${y}`).join(' ')}  stroke='red'/>
+}) => (
+  <g className={className}>
+    <polygon points={coordinates.map(({ x, y }) => `${x},${y}`).join(' ')} stroke='red' />
+  </g>
+);
 
 
 AddPolygon.defaultProps = {
