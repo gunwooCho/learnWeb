@@ -9,12 +9,12 @@ const Polygon = ({
   coordinates,
   ...rest
 }) => {
-  let Component = AddPolygon;
+  let component = <AddPolygon {...rest} />;
   if (coordinates.length) {
-    Component = EditPolygon;
+    component = <EditPolygon coordinates={coordinates} {...rest} />;
   }
 
-  return <Component coordinates={coordinates} {...rest} />;
+  return component;
 };
 
 Polygon.defaultProps = {
@@ -31,6 +31,7 @@ export default Polygon;
 
 /**
 @typedef {{
-  className: string
-} & import('../../../containers/SvgEditor/Polygon/AddPolygonContainer').RenderProps} Props
+  coordinates: SVGPoint[],
+}} Props
+
 */

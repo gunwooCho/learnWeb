@@ -7,7 +7,7 @@ export const DRAWING_MODE = Object.freeze({
   POLYGON: 'polygon',
 })
 
-/** @extends {React.Component<Props, State>} */
+/** @extends {React.Component<Props>} */
 class SvgEditorContainer extends React.Component {
   startPoint = null;
 
@@ -51,9 +51,56 @@ class SvgEditorContainer extends React.Component {
     }
   }
 
+  /** @param {number} x */
+  getX = x => {
+    const { viewBox } = this.props;
+    const unserValue = viewBox[0];
+    const overValue = viewBox[2];
+
+    let value = x;
+    value = Math.max(value, unserValue);
+    value = Math.min(value, overValue);
+
+    let flowValue = 0;
+    if (x < unserValue) {
+      flowValue = x;
+    }
+    if (x > overValue) {
+      flowValue = x - overValue;
+    }
+
+    return {
+      value,
+      flowValue,
+    };
+  }
+
+  /** @param {number} y */
+  getY = y => {
+    const { viewBox } = this.props;
+    const unserValue = viewBox[1];
+    const overValue = viewBox[3];
+
+    let value = y;
+    value = Math.max(value, unserValue); // under
+    value = Math.min(value, overValue); // over
+
+    let flowValue = 0;
+    if (y < unserValue) {
+      flowValue = y;
+    }
+    if (y > overValue) {
+      flowValue = y - overValue;
+    }
+
+    return {
+      value,
+      flowValue,
+    };
+  }
+
   /** @param {MouseEvent} */
   getCoordinate = ({ clientX, clientY }) => {
-    const { viewBox } = this.props;
     const { svg } = this.state;
 
     let point = svg.createSVGPoint();
@@ -62,12 +109,72 @@ class SvgEditorContainer extends React.Component {
     point.y = clientY;
     point = point.matrixTransform(svg.getScreenCTM().inverse());
 
-    point.x = Math.max(point.x, viewBox[0]); // under
-    point.x = Math.min(point.x, viewBox[2]); // over
+    const x = this.getX(point.x);
+    const y = this.getY(point.y);
 
-    point.y = Math.max(point.y, viewBox[1]); // under
-    point.y = Math.min(point.y, viewBox[3]); // over
+    point.x = x.value;
+    point.y = y.value;
 
+    return point;
+  }
+
+  /** @param {SVGElement} element */
+  getCenterCoordinate = (element = null) => {
+    if (element === null) {
+      return null;
+    }
+
+    const { svg } = this.state;
+    const { x, y, width, height } = element.getBoundingClientRect();
+
+    const point = svg.createSVGPoint();
+    const xData = this.getX(width / 2 + x);
+    const yData = this.getY(height / 2 + y);
+
+    point.x = xData.value;
+    point.y = yData.value;
+
+    return point;
+  }
+
+  /**
+   * @param {SVGPoint} start
+   * @param {SVGPoint} end
+   * @param {SVGPoint[]} coordinates
+   */
+  getDiffPoint = (start, end, coordinates = []) => {
+    const { svg } = this.state;
+
+    const point = svg.createSVGPoint();
+    point.x = end.x - start.x;
+    point.y = end.y - start.y;
+
+
+    if (coordinates.length === 0) {
+      return point;
+    }
+
+    const { viewBox } = this.props;
+    const xs = coordinates.map(({ x }) => x);
+    const ys = coordinates.map(({ y }) => y);
+
+    const minX = Math.min(...xs);
+    if (point.x < 0 && (minX + point.x) < viewBox[0]) {
+      point.x = -minX;
+    }
+    const maxX = Math.max(...xs);
+    if (point.x > 0 && (maxX + point.x) > viewBox[2]) {
+      point.x = viewBox[2] - maxX;
+    }
+
+    const minY = Math.min(...ys);
+    if (point.y < 0 && (minY + point.y) < viewBox[1]) {
+      point.y = -minY;
+    }
+    const maxY = Math.max(...ys);
+    if (point.y > 0 && (maxY + point.y) > viewBox[3]) {
+      point.y = viewBox[3] - maxY;
+    }
     return point;
   }
 
@@ -133,9 +240,7 @@ class SvgEditorContainer extends React.Component {
   }
 
   /** @param {ITargetContainer} targetContainer */
-  setContainer = (targetContainer = {}) => {
-    this.setState({ targetContainer });
-  }
+  setContainer = (targetContainer = {}) => this.setState({ targetContainer });
 
   /** @param {ITargetContainer} target */
   unsetContainer = target => {
@@ -158,8 +263,11 @@ class SvgEditorContainer extends React.Component {
     const { svg } = this.state;
     const point = svg.createSVGPoint();
 
-    point.x = x;
-    point.y = y;
+    const xData = this.getX(x);
+    const yData = this.getY(y);
+    point.x = xData.value;
+    point.y = yData.value;
+
     return point;
   }
 
@@ -185,7 +293,7 @@ SvgEditorContainer.propTypes = {
 export default SvgEditorContainer;
 
 /**
-@typedef {(event:MouseEvent, point: SVGPoint)} IOnSvgMouseEvent
+@typedef {(event:MouseEvent, point: SVGPoint) => any} IOnSvgMouseEvent
 
 @typedef {{
   onMousedown?: IOnSvgMouseEvent,

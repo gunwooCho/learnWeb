@@ -15,7 +15,12 @@ const EditPolygon = ({
   movedCoordinates,
 }) => (
   <g id={id} className={className}>
-    <polygon points={movedCoordinates.map(({ x, y }) => `${x},${y}`).join(' ')} />
+    <polygon
+      id={`polygon-${id}`}
+      ref={setRef}
+
+      points={movedCoordinates.map(({ x, y }) => `${x},${y}`).join(' ')}
+    />
 
     {movedCoordinates.map(({ x, y }, index, arr) => {
       const nextIndex = (index + 1) % movedCoordinates.length;
@@ -23,7 +28,9 @@ const EditPolygon = ({
 
       return (
         <line
+          id={`line-${id}-${index}`}
           key={`line-${id}-${index}`}
+
           x1={x}
           y1={y}
           x2={p2.x}
@@ -35,9 +42,11 @@ const EditPolygon = ({
 
     {movedCoordinates.map(({ x, y }, index) => (
       <circle
-        id={index}
-        ref={setRef(index)}
+        id={`circle-${id}-${index}`}
         key={`circle-${id}-${index}`}
+        ref={setRef}
+        data-index={index}
+
         cx={x}
         cy={y}
         r="10"

@@ -11,19 +11,21 @@ export const DRAWING_MODE = Object.freeze({
 
 /** @extends {React.Component<Props>} */
 class EditPolygonContainer extends React.Component {
-  /** @type {{ [key: string | number]: SVGCircleElement }} */
+  /** @type {{ [key: string | number]: SVGCircleElement | SVGPolygonElement }} */
   elementRefs = {};
 
   /** @param {Props} props */
   constructor(props) {
     super(props);
-    const { instance: { setContainer }, coordinates } = props;
 
-    setContainer(this);
+    const { instance, coordinates } = props;
+
+    instance.setContainer(this);
 
     /** @type {State} */
     this.state = {
       ref: null,
+      downPoint: null,
       movedCoordinates: coordinates,
     };
   }
@@ -44,51 +46,103 @@ class EditPolygonContainer extends React.Component {
     unsetContainer(this);
   }
 
-  setRef = (...args) => ref => {
-    if (ref instanceof SVGCircleElement) {
-      /** @type {[number]} */
-      const [index] = args;
+  /** @param {SVGElement} ref */
+  setRef = (ref = null) => {
+    if (ref === null) {
+      return;
+    }
 
-      if (this.elementRefs[index] !== ref) {
-        this.elementRefs[index] = ref;
+    this.elementRefs[ref.id] = ref;
+
+    switch (ref.constructor) {
+      case SVGCircleElement:
+      case SVGPolygonElement: {
+        this.elementRefs[ref.id] = ref;
+        break;
       }
+
+      default:
     }
   }
 
-  /** @param {MouseEvent} event */
+  /** @param {SVGPoint} point */
+  getMoveCircleCoodinates = point => {
+    const { ref, movedCoordinates } = this.state;
+
+    const coordinates = [...movedCoordinates];
+    coordinates[ref.dataset.index] = point;
+
+    return coordinates;
+  }
+
+  /** @param {SVGPoint} point */
+  getMovePolygonCoordinates = point => {
+    const { instance, coordinates } = this.props;
+    const { downPoint } = this.state;
+
+    const { x: diffX, y: diffY } = instance.getDiffPoint(downPoint, point, coordinates);
+
+    const nextCoordinates = coordinates.map(({ x, y }) => instance.createPoint(x + diffX, y + diffY));
+    return nextCoordinates;
+  }
+
+  /**
+   * @param {MouseEvent} event
+   * @param {SVGPoint} point
+   */
   onMousedown = (event, point) => {
-    this.setState({ ref: this.elementRefs[event.target.id] || null });
+    const ref = this.elementRefs[event.target.id] || null;
+
+    this.setState({ ref, downPoint: point });
   }
 
   /** @param {SVGPoint} point */
   onMousemove = (event, point) => {
-    const { ref, movedCoordinates } = this.state;
-    if (ref === null) {
-      return;
+    const { ref } = this.state;
+
+    switch ((ref || {}).constructor) {
+      case SVGCircleElement: {
+        this.setState({ movedCoordinates: this.getMoveCircleCoodinates(point) });
+        break;
+      }
+
+      case SVGPolygonElement: {
+        this.setState({ movedCoordinates: this.getMovePolygonCoordinates(point) });
+        break;
+      }
+
+      default:
     }
-
-    const coordinates = [...movedCoordinates];
-    coordinates[ref.id] = point;
-
-    this.setState({ movedCoordinates: coordinates })
   }
 
   /** @param {SVGPoint} point */
   onMouseup = (event, point) => {
-    const { ref, movedCoordinates } = this.state;
-    if (ref === null) {
-      return;
+    const { ref } = this.state;
+
+    let nextCoordinates = null;
+    switch ((ref || {}).constructor) {
+      case SVGCircleElement: {
+        nextCoordinates = this.getMoveCircleCoodinates(point);
+        break;
+      }
+
+      case SVGPolygonElement: {
+        nextCoordinates = this.getMovePolygonCoordinates(point);
+        break;
+      }
+
+      default:
     }
 
-    const { instance, onChange, coordinates: oldCoordinates } = this.props;
-    instance.onEnd();
-    if (onChange) {
-      const coordinates = [...movedCoordinates];
-      coordinates[ref.id] = point;
-      onChange(coordinates);
-    }
+    if (nextCoordinates) {
+      const { instance, coordinates, onChange } = this.props;
+      instance.onEnd();
+      this.setState({ movedCoordinates: coordinates, ref: null, downPoint: null })
 
-    this.setState({ movedCoordinates: oldCoordinates, ref: null })
+      if (onChange) {
+        onChange(nextCoordinates);
+      }
+    }
   }
 
   render() {
@@ -107,7 +161,7 @@ EditPolygonContainer.defaultProps = {
 
 EditPolygonContainer.propTypes = {
   render: PropTypes.func.isRequired,
-  coordinates: PropTypes.arrayOf(Object).isRequired,
+  coordinates: PropTypes.arrayOf(SVGPoint).isRequired,
   onChange: PropTypes.func,
 
   // SvgEditorContainer
@@ -122,6 +176,7 @@ export default EditPolygonContainer;
 @typedef {{
   ref?: SVGCircleElement,
   movedCoordinates: SVGPoint[],
+  downPoint?: SVGPoint,
 }} State
 
 @typedef {{
@@ -129,5 +184,5 @@ export default EditPolygonContainer;
   coordinates: SVGPoint[],
 }} Props
 
-@typedef {EditPolygonContainer & Props & State} RenderProps
+@typedef {EditPolygonContainer & State & Props} RenderProps
 */
