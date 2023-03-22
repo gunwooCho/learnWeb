@@ -10,7 +10,7 @@ const Polygon = ({
 
   // only edit Props
   id,
-  coordinates,
+  data,
   enableEdge,
   enableMove,
 
@@ -23,11 +23,11 @@ const Polygon = ({
     />
   );
 
-  if (id && coordinates.length) {
+  if (id && data.length) {
     component = (
       <EditPolygon
         id={id}
-        coordinates={coordinates}
+        data={data}
         enableEdge={enableEdge}
         enableMove={enableMove}
         {...rest}
@@ -43,7 +43,7 @@ Polygon.defaultProps = {
 
   // only edit Props
   id: null,
-  coordinates: [],
+  data: [],
   enableEdge: false,
   enableMove: true,
 }
@@ -53,7 +53,7 @@ Polygon.propTypes = {
 
   // only edit Props
   id: PropTypes.string,
-  coordinates: PropTypes.arrayOf(SVGPoint),
+  data: PropTypes.arrayOf(SVGPoint),
   enableEdge: PropTypes.bool,
   enableMove: PropTypes.bool,
 }
@@ -63,7 +63,7 @@ export default Polygon;
 /**
 @typedef {{
   id?: string,
-  coordinates: SVGPoint[],
+  data: SVGPoint[],
 
   enableEdge?: boolean,
   enableMove?: boolean,

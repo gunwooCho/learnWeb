@@ -24,8 +24,15 @@ const SvgEditor = ({
       ref={setRef}
     >
       <Polygon
+        id='1'
         instance={instance}
-        coordinates={[]}
+        data={[
+          // test
+          // { x: 150, y: 150 },
+          // { x: 200, y: 150 },
+          // { x: 200, y: 200 },
+          // { x: 150, y: 200 },
+        ]}
       />
     </SvgStyled>
   </BorderStyled>
@@ -47,7 +54,7 @@ SvgEditor.propTypes = {
   // [Container] SvgEditorContainer
   viewBox: PropTypes.arrayOf(Number).isRequired,
   setRef: PropTypes.func.isRequired,
-  instance: PropTypes.instanceOf(Object).isRequired,
+  instance: PropTypes.instanceOf(SvgEditorContainer).isRequired,
 };
 
 export default withContainer(SvgEditorContainer, SvgEditor);;

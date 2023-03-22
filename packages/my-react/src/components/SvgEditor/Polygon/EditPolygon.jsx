@@ -14,7 +14,7 @@ const EditPolygon = ({
 
   // EditPolygonContainer
   setRef,
-  movedCoordinates,
+  coordinates,
 }) => (
   <g id={id} className={className}>
     {enableMove && (
@@ -23,12 +23,12 @@ const EditPolygon = ({
         ref={setRef}
         // ref={enableMove ? setRef : null}
 
-        points={movedCoordinates.map(({ x, y }) => `${x},${y}`).join(' ')}
+        points={coordinates.map(({ x, y }) => `${x},${y}`).join(' ')}
       />
     )}
 
-    {movedCoordinates.map(({ x, y }, index, arr) => {
-      const nextIndex = (index + 1) % movedCoordinates.length;
+    {coordinates.map(({ x, y }, index, arr) => {
+      const nextIndex = (index + 1) % coordinates.length;
       const p2 = arr[nextIndex];
 
       return (
@@ -45,7 +45,7 @@ const EditPolygon = ({
       );
     })}
 
-    {enableEdge && movedCoordinates.map(({ x, y }, index) => (
+    {enableEdge && coordinates.map(({ x, y }, index) => (
       <circle
         id={`circle-${id}-${index}`}
         key={`circle-${id}-${index}`}
@@ -72,7 +72,7 @@ EditPolygon.propTypes = {
 
   // [Container] EditPolygonContainer
   setRef: PropTypes.func.isRequired,
-  movedCoordinates: PropTypes.arrayOf(Object).isRequired,
+  coordinates: PropTypes.arrayOf(Object).isRequired,
 }
 
 export default withContainer(EditPolygonContainer, EditPolygon);
@@ -81,9 +81,9 @@ export default withContainer(EditPolygonContainer, EditPolygon);
 @typedef {{
   className: string
   id: string,
-  coordinates: SVGPoint[],
-
   enableEdge: boolean,
   enableMove: boolean,
+
+  coordinates: SVGPoint[],
 } & import('../../../containers/SvgEditor/Polygon/EditPolygonContainer').RenderProps} Props
 */

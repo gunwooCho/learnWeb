@@ -18,7 +18,7 @@ class EditPolygonContainer extends React.Component {
   constructor(props) {
     super(props);
 
-    const { instance, coordinates } = props;
+    const { instance, data } = props;
 
     instance.setContainer(this);
 
@@ -26,17 +26,17 @@ class EditPolygonContainer extends React.Component {
     this.state = {
       ref: null,
       downPoint: null,
-      movedCoordinates: coordinates,
+      coordinates: data,
     };
   }
 
   /** @param {Props} prevProps */
   componentDidUpdate(prevProps) {
-    const { coordinates } = this.props;
+    const { data } = this.props;
 
-    if (JSON.stringify(coordinates) !== JSON.stringify(prevProps.coordinates)) {
+    if (JSON.stringify(data) !== JSON.stringify(prevProps.data)) {
       this.setState({
-        movedCoordinates: coordinates,
+        coordinates: data,
       });
     }
   }
@@ -67,22 +67,22 @@ class EditPolygonContainer extends React.Component {
 
   /** @param {SVGPoint} point */
   getMoveCircleCoodinates = point => {
-    const { ref, movedCoordinates } = this.state;
+    const { ref, coordinates } = this.state;
 
-    const coordinates = [...movedCoordinates];
-    coordinates[ref.dataset.index] = point;
+    const result = [...coordinates];
+    result[ref.dataset.index] = point;
 
-    return coordinates;
+    return result;
   }
 
   /** @param {SVGPoint} point */
   getMovePolygonCoordinates = point => {
-    const { instance, coordinates } = this.props;
+    const { instance, data } = this.props;
     const { downPoint } = this.state;
 
-    const { x: diffX, y: diffY } = instance.getDiffPoint(downPoint, point, coordinates);
+    const { x: diffX, y: diffY } = instance.getDiffPoint(downPoint, point, data);
 
-    const nextCoordinates = coordinates.map(({ x, y }) => instance.createPoint(x + diffX, y + diffY));
+    const nextCoordinates = data.map(({ x, y }) => instance.createPoint(x + diffX, y + diffY));
     return nextCoordinates;
   }
 
@@ -102,12 +102,12 @@ class EditPolygonContainer extends React.Component {
 
     switch ((ref || {}).constructor) {
       case SVGCircleElement: {
-        this.setState({ movedCoordinates: this.getMoveCircleCoodinates(point) });
+        this.setState({ coordinates: this.getMoveCircleCoodinates(point) });
         break;
       }
 
       case SVGPolygonElement: {
-        this.setState({ movedCoordinates: this.getMovePolygonCoordinates(point) });
+        this.setState({ coordinates: this.getMovePolygonCoordinates(point) });
         break;
       }
 
@@ -135,9 +135,9 @@ class EditPolygonContainer extends React.Component {
     }
 
     if (nextCoordinates) {
-      const { instance, coordinates, id, onChange } = this.props;
+      const { instance, data, id, onChange } = this.props;
       instance.onEnd();
-      this.setState({ movedCoordinates: coordinates, ref: null, downPoint: null })
+      this.setState({ coordinates: data, ref: null, downPoint: null })
 
       if (onChange) {
         onChange(nextCoordinates, id);
@@ -161,7 +161,7 @@ EditPolygonContainer.defaultProps = {
 
 EditPolygonContainer.propTypes = {
   render: PropTypes.func.isRequired,
-  coordinates: PropTypes.arrayOf(SVGPoint).isRequired,
+  data: PropTypes.arrayOf(SVGPoint).isRequired,
   id: PropTypes.string.isRequired,
   onChange: PropTypes.func,
 
@@ -176,14 +176,14 @@ export default EditPolygonContainer;
 
 @typedef {{
   ref?: SVGCircleElement,
-  movedCoordinates: SVGPoint[],
+  coordinates: SVGPoint[],
   downPoint?: SVGPoint,
 }} State
 
 @typedef {{
   instance: SvgEditorContainer,
   id: string,
-  coordinates: SVGPoint[],
+  data: SVGPoint[],
 
   onChange: (coordinates: SVGPoint[], id: string) => void,
 }} Props
