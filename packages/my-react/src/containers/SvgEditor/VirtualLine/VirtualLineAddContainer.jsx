@@ -15,6 +15,7 @@ class VirtualLineAddContainer extends React.Component {
       endStep: 1,
       step: 0,
       downPoint: null,
+      arrowPoint: null,
       coordinates: [],
     };
 
@@ -26,6 +27,7 @@ class VirtualLineAddContainer extends React.Component {
     unsetContainer(this);
   }
 
+  /** @param {SVGPoint | SVGPoint[]} point */
   setPoint = point => {
     const { step, coordinates: oldCoordinates } = this.state;
 
@@ -36,7 +38,29 @@ class VirtualLineAddContainer extends React.Component {
       coordinates[step] = point;
     }
 
-    this.setState({ coordinates });
+    let arrowPoint = null;
+    if (coordinates.length === 2) {
+      const { instance, minSize } = this.props;
+
+      const [p1, p2] = coordinates;
+
+      const p = instance.createPoint((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
+      const deg = Math.atan2(p1.y - p2.y, p1.x - p2.x) * 180 / Math.PI;
+
+      arrowPoint = {
+        x: p.x - minSize / 2,
+        y: p.y - minSize / 2,
+        centerX: p.x,
+        centerY: p.y,
+
+        width: minSize,
+        height: minSize,
+        deg,
+        gTransform: `translate(${p.x} ${p.y}) rotate(${deg})`,
+      }
+    }
+
+    this.setState({ coordinates, arrowPoint });
   }
 
   drawEnd = () => {
@@ -52,7 +76,8 @@ class VirtualLineAddContainer extends React.Component {
       step: 0,
       endStep,
       downPoint: null,
-      coordinates: [],
+      // coordinates: [],
+      // arrowPoint: null,
     });
   };
 
@@ -133,7 +158,7 @@ VirtualLineAddContainer.defaultProps = {
   onChange: null,
 
   // defaultProps
-  minSize: 10,
+  minSize: 50,
   endStep: 2,
 };
 
@@ -156,6 +181,17 @@ export default VirtualLineAddContainer;
   step: number,
   downPoint: SVGPoint,
   coordinates: SVGPoint[],
+  arrowPoint: {
+    x: number,
+    y: number,
+    centerX: number,
+    centerY: number,
+
+    width: number,
+    height: number,
+    deg: number,
+    gTransform: string,
+  },
 }} State
 
 @typedef {{
