@@ -32,12 +32,8 @@ const VirtualLineAdd = ({
           />
 
           {arrowPoint && (
-            <g transform={arrowPoint.gTransform}>
-              <rect
-                width={arrowPoint.width}
-                height={arrowPoint.height}
-                transform={`translate(-${arrowPoint.width / 2} -${arrowPoint.height / 2})`}
-              />
+            <g {...arrowPoint.gAttr}>
+              <image {...arrowPoint.imageAttr} />
             </g>
           )}
         </>
@@ -65,6 +61,7 @@ export default withContainer(VirtualLineAddContainer, VirtualLineAdd);
 /**
 @typedef {{
   className: string
+  stroke: string,
 } & import('../../../containers/SvgEditor/VirtualLine/VirtualLineAddContainer').RenderProps
 } Props
 */

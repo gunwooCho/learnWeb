@@ -38,25 +38,29 @@ class VirtualLineAddContainer extends React.Component {
       coordinates[step] = point;
     }
 
+    /** @type {ArrowPoint} */
     let arrowPoint = null;
     if (coordinates.length === 2) {
       const { instance, minSize } = this.props;
 
       const [p1, p2] = coordinates;
+      const { x, y } = instance.createPoint((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
 
-      const p = instance.createPoint((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
       const deg = Math.atan2(p1.y - p2.y, p1.x - p2.x) * 180 / Math.PI;
-
+      const width = minSize;
+      const height = minSize;
       arrowPoint = {
-        x: p.x - minSize / 2,
-        y: p.y - minSize / 2,
-        centerX: p.x,
-        centerY: p.y,
-
-        width: minSize,
-        height: minSize,
-        deg,
-        gTransform: `translate(${p.x} ${p.y}) rotate(${deg})`,
+        gAttr: {
+          transform: `translate(${x} ${y}) rotate(${deg})`
+        },
+        imageAttr: {
+          href: null,
+          x: -(width / 2),
+          y: -(height / 2),
+          width,
+          height,
+          // transform: `translate(-${width / 2} -${height / 2})`,
+        }
       }
     }
 
@@ -177,21 +181,16 @@ export default VirtualLineAddContainer;
 
 /**
 @typedef {{
+  gAttr: React.SVGAttributes<SVGGElement>,
+  imageAttr: React.SVGAttributes<SVGImageElement>
+}} ArrowPoint
+
+@typedef {{
   endStep: number,
   step: number,
   downPoint: SVGPoint,
   coordinates: SVGPoint[],
-  arrowPoint: {
-    x: number,
-    y: number,
-    centerX: number,
-    centerY: number,
-
-    width: number,
-    height: number,
-    deg: number,
-    gTransform: string,
-  },
+  arrowPoint?: ArrowPoint,
 }} State
 
 @typedef {{
