@@ -11,6 +11,7 @@ const VirtualLine = ({
   // only edit Props
   id,
   data,
+
   ...rest
 }) => {
   let component = (

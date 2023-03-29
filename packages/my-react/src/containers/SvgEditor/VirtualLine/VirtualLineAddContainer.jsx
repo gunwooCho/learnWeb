@@ -114,7 +114,7 @@ class VirtualLineAddContainer extends React.Component {
       if (Math.abs(diffX) > minSize
         || Math.abs(diffY) > minSize
       ) {
-        this.setState({ endStep: 1 })
+        this.setState({ step: 1 })
         this.setPoint([downPoint, point]);
         return;
       }
