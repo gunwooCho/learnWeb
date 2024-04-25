@@ -1,1 +1,0 @@
-# vite-wasm-hello-world
